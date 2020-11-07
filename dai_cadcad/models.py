@@ -69,10 +69,10 @@ def flipper_eth_model_clever_boi(status, user_id, state, extra):
         "price": price,
     }
 
-
 choose = {
     "flipper_eth": {
         "basic": flipper_eth_model_basic,
         "clever_boi": flipper_eth_model_clever_boi,
+        "nathan_strategy": flipper_eth_model_basic
     }
 }

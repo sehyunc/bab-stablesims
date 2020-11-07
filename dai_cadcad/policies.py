@@ -468,6 +468,7 @@ def init(params, _substep, _state_hist, state):
                 eth = 1000000
                 dai = eth * spot * 0.9
                 clever_boi = open_eth_vault(new_vat, eth, dai)
+                nathan = open_eth_vault(new_vat, eth, dai)
             else:
                 eth = random.uniform(1, 1000)
                 dai = eth * spot * random.uniform(0.8, 1)
@@ -478,6 +479,11 @@ def init(params, _substep, _state_hist, state):
 
         new_keepers[clever_boi] = {
             "flipper_eth_model": {"type": "clever_boi", "extra": {"discount": 0.15}},
+            "flapper_model": {"type": "basic", "extra": {}},
+            "flopper_model": {"type": "basic", "extra": {}},
+        }
+        new_keepers[nathan] = {
+            "flipper_eth_model": {"type": "nathan_strategy", "extra": {}},
             "flapper_model": {"type": "basic", "extra": {}},
             "flopper_model": {"type": "basic", "extra": {}},
         }
@@ -649,6 +655,62 @@ def keeper_bid_flipper_eth_generator(_params, _substep, _state_hist, state):
                 user_id,
                 now,
                 new_stats,
+            )
+
+    return {"vat": new_vat, "flipper_eth": new_flipper_eth, "stats": new_stats}
+#nathan's sorting algorithm. Sorts the auctions 
+def nathan_keeper_bid_flipper_eth_generator(_params, _substep, _state_hist, state):
+    """ Executes all `keeper_bid` policies for a timestep.
+    """
+
+    new_vat = deepcopy(state["vat"])
+    spotter = state["spotter"]
+    new_stats = deepcopy(state["stats"])
+    keepers = state["keepers"]
+    new_flipper_eth = deepcopy(state["flipper_eth"])
+    bids = deepcopy(new_flipper_eth["bids"])
+    now = state["timestep"]
+    bids.sort(key = lambda bid:bid["lot"]/bid["bid"]*new_flipper_eth["beg"])
+    for bid_id in bids:
+        bid = new_flipper_eth["bids"][bid_id]
+        status = {
+            "id": bid_id,
+            "flipper": "flipper_eth",
+            "bid": bid["bid"],
+            "lot": bid["lot"],
+            "tab": bid["tab"],
+            "beg": new_flipper_eth["beg"],
+            "guy": bid["guy"],
+            "era": now,
+            "tic": bid["tic"],
+            "end": bid["end"],
+            "price": Wad(bid["bid"] / Rad(bid["lot"]))
+            if bid["lot"] != Wad(0)
+            else None,
+        }
+        
+        #user_ids = list(keepers.keys())
+        #random.shuffle(user_ids)
+        #for user_id in user_ids:
+        user_id = ""
+        for i in list(keepers.keys()):
+            if keepers[i]["flipper_eth_model"]["type"] == "nathan_strategy":
+                user_id = i
+        model_type = keepers[user_id]["flipper_eth_model"]["type"]
+        model_extra = keepers[user_id]["flipper_eth_model"]["extra"]
+        bidding_model = models.choose["flipper_eth"][model_type]
+
+        stance = bidding_model(status, user_id, state, model_extra)
+
+        keeper_bid_flipper_eth(
+            new_flipper_eth,
+            new_vat,
+            spotter,
+            stance,
+            bid_id,
+            user_id,
+            now,
+            new_stats,
             )
 
     return {"vat": new_vat, "flipper_eth": new_flipper_eth, "stats": new_stats}
