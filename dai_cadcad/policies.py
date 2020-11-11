@@ -491,7 +491,7 @@ def init(params, _substep, _state_hist, state):
             list(new_vat["urns"]["eth"].keys()),
             k=max(params["NUM_INIT_VAULTS"] // 10, 1),
         ):
-            if user_id != clever_boi:
+            if user_id != clever_boi and user_id != nathan:
                 new_keepers[user_id] = {
                     "flipper_eth_model": {
                         "type": "basic",

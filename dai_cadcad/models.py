@@ -47,6 +47,25 @@ def flipper_eth_model_basic(status, user_id, state, extra):
         "price": price,
         "gas_price": gas_price,
     }
+#nathan's bidding model 
+def flipper_eth_model_nathan(status, user_id, _state, extra):
+    """ Makes the smallest valid bid.
+    """
+    gas_price = extra["gas_price"]
+
+    if status["guy"] == user_id or not status["price"]:
+        return None
+    if min(status["end"],status["tic"]) - status["era"] > 2:
+        return None
+    elif status["price"] == Wad(0):
+        price = Wad(1)
+    else:
+        price = status["price"] * status["beg"]
+
+    return {
+        "price": price,
+        "gas_price": gas_price,
+    }
 
 
 def flipper_eth_model_clever_boi(status, user_id, state, extra):
@@ -73,6 +92,6 @@ choose = {
     "flipper_eth": {
         "basic": flipper_eth_model_basic,
         "clever_boi": flipper_eth_model_clever_boi,
-        "nathan_strategy": flipper_eth_model_basic
+        "nathan_strategy": flipper_eth_model_nathan
     }
 }
